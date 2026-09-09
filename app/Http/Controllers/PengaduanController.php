@@ -5,6 +5,7 @@ namespace App\Http\Controllers;
 use App\Models\Pengaduan;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Http\UploadedFile;
 use Illuminate\View\View;
 
 class PengaduanController extends Controller
@@ -24,7 +25,14 @@ class PengaduanController extends Controller
             'email' => 'required|email|max:255',
             'sasaran_pengaduan' => 'required|string|max:255',
             'hal_diadukan' => 'required|string|max:5000',
+            'bukti_pendukung' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:5120',
         ]);
+
+        $buktiPendukung = $request->file('bukti_pendukung');
+
+        if ($buktiPendukung instanceof UploadedFile) {
+            $validated['bukti_pendukung'] = $buktiPendukung->store('pengaduan', 'local');
+        }
 
         do {
             $nomorTiket = 'TKT-'.now()->format('Ymd').'-'.random_int(100, 999);

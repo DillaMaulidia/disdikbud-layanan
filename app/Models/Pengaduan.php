@@ -13,5 +13,6 @@ class Pengaduan extends Model
         'email',
         'sasaran_pengaduan',
         'hal_diadukan',
+        'bukti_pendukung',
     ];
 }

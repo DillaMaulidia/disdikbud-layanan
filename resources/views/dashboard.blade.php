@@ -41,7 +41,7 @@
                 Dashboard Layanan
             </a>
 
-            <a href="#">
+            <a href="{{ route('pengaduan.create') }}">
                 Layanan Permohonan
             </a>
 
@@ -55,11 +55,11 @@
         <!-- LOGIN -->
         <div class="navbar-auth">
 
-            <a href="#">
+            <a href="{{ route('login') }}">
                 Login
             </a>
 
-            <a href="#">
+            <a href="{{ route('register') }}">
                 Register
             </a>
 
@@ -113,7 +113,7 @@
             <!-- BUTTON -->
             <div class="hero-buttons">
 
-                <a href="#" class="btn btn-primary">
+                <a href="{{ route('pengaduan.create') }}" class="btn btn-primary">
 
                     <span class="btn-icon">
                         ↗

@@ -5,6 +5,8 @@ namespace Tests\Feature;
 use App\Models\Pengaduan;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\TestCase;
 
 class PengaduanControllerTest extends TestCase
@@ -22,6 +24,8 @@ class PengaduanControllerTest extends TestCase
 
     public function test_authenticated_user_can_submit_a_complaint(): void
     {
+        Storage::fake('local');
+
         $response = $this->actingAs(User::factory()->create())
             ->post('/layanan-permohonan', [
                 'nama_lengkap' => 'Budi Santoso',
@@ -29,6 +33,7 @@ class PengaduanControllerTest extends TestCase
                 'email' => 'budi@example.com',
                 'sasaran_pengaduan' => 'Sekretariat',
                 'hal_diadukan' => 'Permohonan informasi layanan.',
+                'bukti_pendukung' => UploadedFile::fake()->image('bukti.jpg'),
             ]);
 
         $response->assertRedirect();
@@ -39,9 +44,14 @@ class PengaduanControllerTest extends TestCase
             'status' => 'pending',
         ]);
 
+        $pengaduan = Pengaduan::query()->sole();
+
+        $this->assertNotNull($pengaduan->bukti_pendukung);
+        Storage::disk('local')->assertExists($pengaduan->bukti_pendukung);
+
         $this->assertMatchesRegularExpression(
             '/^TKT-\d{8}-\d{3}$/',
-            Pengaduan::query()->sole()->nomor_tiket,
+            $pengaduan->nomor_tiket,
         );
     }
 }
