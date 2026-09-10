@@ -17,14 +17,22 @@
 
         <nav class="navbar-menu" id="complaintNavbarMenu">
             <a href="{{ route('dashboard') }}">Dashboard Layanan</a>
-            <a href="{{ route('pengaduan.create') }}" class="active">Layanan Permohonan</a>
-            <a href="#">Tiket</a>
         </nav>
 
         <div class="navbar-auth">
-            <a href="{{ route('profile.edit') }}" class="profile-avatar" title="Profil {{ Auth::user()->name }}" aria-label="Buka profil">
-                {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
-            </a>
+            <div class="profile-menu">
+                <button type="button" class="profile-avatar" title="Profil {{ Auth::user()->name }}" aria-label="Buka profil" onclick="toggleComplaintProfileMenu()">
+                    {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+                </button>
+
+                <div class="profile-dropdown" id="complaintProfileDropdown">
+                    <a href="{{ route('profile.edit') }}">Profil</a>
+                    <form method="POST" action="{{ route('logout') }}">
+                        @csrf
+                        <button type="submit" class="logout-button">Logout</button>
+                    </form>
+                </div>
+            </div>
         </div>
     </header>
 
@@ -101,6 +109,20 @@
 function toggleComplaintMenu() {
     document.getElementById('complaintNavbarMenu').classList.toggle('show');
 }
+
+function toggleComplaintProfileMenu() {
+    const dropdown = document.getElementById('complaintProfileDropdown');
+    dropdown.classList.toggle('show');
+}
+
+document.addEventListener('click', function (event) {
+    const profileMenu = document.querySelector('.profile-menu');
+    const dropdown = document.getElementById('complaintProfileDropdown');
+
+    if (profileMenu && !profileMenu.contains(event.target)) {
+        dropdown.classList.remove('show');
+    }
+});
 
 document.getElementById('bukti_pendukung').addEventListener('change', function () {
     document.getElementById('file-name').textContent = this.files[0]?.name || 'JPG, JPEG, PNG, atau WEBP maksimal 5 MB';

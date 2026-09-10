@@ -14,5 +14,6 @@ class Pengaduan extends Model
         'sasaran_pengaduan',
         'hal_diadukan',
         'bukti_pendukung',
+        'status',
     ];
 }

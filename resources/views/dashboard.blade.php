@@ -41,27 +41,38 @@
                 Dashboard Layanan
             </a>
 
-            <a href="{{ route('pengaduan.create') }}">
-                Layanan Permohonan
-            </a>
-
-            <a href="#">
-                Tiket
-            </a>
-
         </nav>
 
 
-        <!-- LOGIN -->
+        <!-- LOGIN / USER -->
         <div class="navbar-auth">
 
-            <a href="{{ route('login') }}">
-                Login
-            </a>
+            @auth
+                <div class="profile-menu">
+                    <button type="button" class="profile-avatar" title="Profil {{ Auth::user()->name }}" aria-label="Buka profil" onclick="toggleProfileMenu()">
+                        {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
+                    </button>
 
-            <a href="{{ route('register') }}">
-                Register
-            </a>
+                    <div class="profile-dropdown" id="profileDropdown">
+                        @if(Auth::user()->role === 'admin')
+                            <a href="{{ route('admin.users.create') }}">Tambah Admin / Operator</a>
+                        @endif
+                        <a href="{{ route('profile.edit') }}">Profil</a>
+                        <form method="POST" action="{{ route('logout') }}">
+                            @csrf
+                            <button type="submit" class="logout-button">Logout</button>
+                        </form>
+                    </div>
+                </div>
+            @else
+                <a href="{{ route('login') }}" class="open-login">
+                    Login
+                </a>
+
+                <a href="{{ route('register') }}">
+                    Register
+                </a>
+            @endauth
 
         </div>
 
@@ -113,26 +124,29 @@
             <!-- BUTTON -->
             <div class="hero-buttons">
 
-                <a href="{{ route('pengaduan.create') }}" class="btn btn-primary">
+                @auth
+                    <a href="{{ route('pengaduan.create') }}" class="btn btn-primary">
 
-                    <span class="btn-icon">
-                        ↗
-                    </span>
+                        <span class="btn-icon">
+                            ↗
+                        </span>
 
-                    Buat Pengaduan
+                        Buat Pengaduan
 
-                </a>
+                    </a>
+                @else
+                    <a href="{{ route('login') }}" class="btn btn-primary open-login">
+
+                        <span class="btn-icon">
+                            ↗
+                        </span>
+
+                        Buat Pengaduan
+
+                    </a>
+                @endauth
 
 
-                <a href="#" class="btn btn-outline">
-
-                    <span class="btn-icon">
-                        ⌕
-                    </span>
-
-                    Tiket Pengaduan
-
-                </a>
 
             </div>
 
@@ -239,6 +253,20 @@ function toggleMenu() {
     menu.classList.toggle('show');
 
 }
+
+function toggleProfileMenu() {
+    const dropdown = document.getElementById('profileDropdown');
+    dropdown.classList.toggle('show');
+}
+
+document.addEventListener('click', function (event) {
+    const profileMenu = document.querySelector('.profile-menu');
+    const dropdown = document.getElementById('profileDropdown');
+
+    if (profileMenu && !profileMenu.contains(event.target)) {
+        dropdown.classList.remove('show');
+    }
+});
 
 </script>
 

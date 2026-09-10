@@ -13,6 +13,22 @@ class PengaduanControllerTest extends TestCase
 {
     use RefreshDatabase;
 
+    public function test_dashboard_shows_profile_navigation_for_authenticated_users(): void
+    {
+        $user = User::factory()->create([
+            'name' => 'Budi Santoso',
+        ]);
+
+        $response = $this->actingAs($user)
+            ->get('/dashboard');
+
+        $response->assertStatus(200);
+        $response->assertSee('profile-avatar');
+        $response->assertSee('Logout');
+        $response->assertDontSee('Login');
+        $response->assertDontSee('Register');
+    }
+
     public function test_authenticated_user_can_view_the_complaint_form(): void
     {
         $response = $this->actingAs(User::factory()->create())
