@@ -17,6 +17,7 @@
 
         <nav class="navbar-menu" id="complaintNavbarMenu">
             <a href="{{ route('dashboard') }}">Dashboard Layanan</a>
+            <a href="{{ route('pengaduan.tickets') }}">Tiket Saya</a>
         </nav>
 
         <div class="navbar-auth">
@@ -44,13 +45,26 @@
             </div>
 
             @if(session('success'))
-                <div class="form-alert form-alert-success">{{ session('success') }}</div>
-            @endif
-
-            @if($errors->any())
+                <div class="complaint-success" role="status">
+                    <div class="success-check" aria-hidden="true">✓</div>
+                    <h1>Pengaduan Berhasil !!</h1>
+                    <p class="success-ticket-label">Nomor Tiket Pengaduan</p>
+                    <div class="success-ticket">{{ session('success.nomor_tiket') }}</div>
+                    <div class="success-status">
+                        <span class="success-status-icon" aria-hidden="true">◷</span>
+                        <div>
+                            <strong>Menunggu Verifikasi</strong>
+                            <p>Pengaduan Anda telah diterima dan sedang menunggu proses verifikasi petugas.</p>
+                        </div>
+                    </div>
+                    <p class="success-reminder">Simpan nomor tiket ini untuk melihat perkembangan pengaduan Anda.</p>
+                    <a href="{{ route('dashboard') }}" class="complaint-submit success-dashboard-link">Kembali ke Dashboard</a>
+                </div>
+            @elseif($errors->any())
                 <div class="form-alert form-alert-error">Mohon periksa kembali data yang Anda masukkan.</div>
             @endif
 
+            @if(!session('success'))
             <form action="{{ route('pengaduan.store') }}" method="POST" enctype="multipart/form-data" class="complaint-form">
                 @csrf
 
@@ -101,6 +115,7 @@
 
                 <button type="submit" class="complaint-submit">Kirim Pengaduan <span>→</span></button>
             </form>
+            @endif
         </div>
     </main>
 </div>

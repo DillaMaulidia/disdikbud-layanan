@@ -7,15 +7,32 @@ use Database\Factories\UserFactory;
 use Illuminate\Database\Eloquent\Attributes\Fillable;
 use Illuminate\Database\Eloquent\Attributes\Hidden;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 
-#[Fillable(['name', 'email', 'password', 'role'])]
+#[Fillable(['name', 'email', 'password', 'role', 'bidang'])]
 #[Hidden(['password', 'remember_token'])]
 class User extends Authenticatable
 {
+    public const BIDANG = [
+        'Bidang Pembinaan SD',
+        'Bidang Pembinaan SMP',
+        'Bidang Kebudayaan',
+        'Sekretariat',
+    ];
+
+    public const BIDANG_CODES = [
+        'Bidang Pembinaan SD' => 'SD',
+        'Bidang Pembinaan SMP' => 'SMP',
+        'Bidang Kebudayaan' => 'KBD',
+        'Sekretariat' => 'SEK',
+    ];
+
     public const ROLE_USER = 'user';
+
     public const ROLE_ADMIN = 'admin';
+
     public const ROLE_OPERATOR = 'operator';
 
     public static function roles(): array
@@ -26,6 +43,22 @@ class User extends Authenticatable
             self::ROLE_OPERATOR,
         ];
     }
+
+    public static function bidang(): array
+    {
+        return self::BIDANG;
+    }
+
+    public static function bidangCode(string $bidang): string
+    {
+        return self::BIDANG_CODES[$bidang];
+    }
+
+    public function pengaduans(): HasMany
+    {
+        return $this->hasMany(Pengaduan::class);
+    }
+
     /** @use HasFactory<UserFactory> */
     use HasFactory, Notifiable;
 

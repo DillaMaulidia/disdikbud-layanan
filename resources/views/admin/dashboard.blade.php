@@ -13,6 +13,12 @@
             </div>
         </a>
 
+        <nav class="navbar-menu admin-nav-menu">
+            <a href="{{ route('admin.dashboard') }}" class="active">Dashboard Admin</a>
+            <a href="{{ route('admin.reports') }}">Laporan Pengaduan</a>
+            <a href="{{ route('admin.users.create') }}">Tambah Admin / Operator</a>
+        </nav>
+
         <div class="navbar-auth">
             <div class="profile-menu">
                 <button type="button" class="profile-avatar" title="Profil {{ Auth::user()->name }}" aria-label="Buka profil" onclick="toggleProfileMenu()">
@@ -20,7 +26,6 @@
                 </button>
 
                 <div class="profile-dropdown" id="profileDropdown">
-                    <a href="{{ route('admin.users.create') }}">Tambah Admin / Operator</a>
                     <a href="{{ route('profile.edit') }}">Profil</a>
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
@@ -58,14 +63,19 @@
                 </div>
 
                 <div class="operator-list">
-                    @forelse($operators as $operator)
-                        <div class="operator-item">
-                            <div class="operator-avatar">{{ strtoupper(substr($operator->name, 0, 1)) }}</div>
-                            <div class="operator-meta">
-                                <strong>{{ $operator->name }}</strong>
-                                <span>{{ $operator->email }}</span>
-                            </div>
-                            <span class="status-badge online">Aktif</span>
+                    @forelse($operatorsByBidang as $bidang => $operatorGroup)
+                        <div class="operator-group">
+                            <h3>{{ $bidang }}</h3>
+                            @foreach($operatorGroup as $operator)
+                                <div class="operator-item">
+                                    <div class="operator-avatar">{{ strtoupper(substr($operator->name, 0, 1)) }}</div>
+                                    <div class="operator-meta">
+                                        <strong>{{ $operator->name }}</strong>
+                                        <span>{{ $operator->email }}</span>
+                                    </div>
+                                    <span class="status-badge online">Aktif</span>
+                                </div>
+                            @endforeach
                         </div>
                     @empty
                         <p class="empty-state">Belum ada operator yang dibuat.</p>
@@ -112,6 +122,7 @@
                 <table>
                     <thead>
                         <tr>
+                            <th>Token</th>
                             <th>Nama</th>
                             <th>Email</th>
                             <th>Sasaran</th>
@@ -119,9 +130,9 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @php $pengaduans = \App\Models\Pengaduan::latest()->take(8)->get(); @endphp
                         @forelse($pengaduans as $pengaduan)
                             <tr>
+                                <td>{{ $pengaduan->nomor_tiket }}</td>
                                 <td>{{ $pengaduan->nama_lengkap }}</td>
                                 <td>{{ $pengaduan->email }}</td>
                                 <td>{{ $pengaduan->sasaran_pengaduan }}</td>
@@ -129,7 +140,7 @@
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="4" class="empty-state">Belum ada data pelapor.</td>
+                                <td colspan="5" class="empty-state">Belum ada data pelapor.</td>
                             </tr>
                         @endforelse
                     </tbody>

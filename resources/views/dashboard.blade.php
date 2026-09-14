@@ -41,6 +41,12 @@
                 Dashboard Layanan
             </a>
 
+            @auth
+                <a href="{{ route('pengaduan.tickets') }}">
+                    Tiket Saya
+                </a>
+            @endauth
+
         </nav>
 
 
@@ -69,7 +75,7 @@
                     Login
                 </a>
 
-                <a href="{{ route('register') }}">
+                <a href="{{ route('register') }}" class="open-register">
                     Register
                 </a>
             @endauth
@@ -134,6 +140,7 @@
                         Buat Pengaduan
 
                     </a>
+
                 @else
                     <a href="{{ route('login') }}" class="btn btn-primary open-login">
 
@@ -144,6 +151,7 @@
                         Buat Pengaduan
 
                     </a>
+
                 @endauth
 
 

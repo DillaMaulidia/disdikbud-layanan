@@ -26,6 +26,7 @@
     @yield('content')
 
     @include('partials.login-modal')
+    @include('partials.register-modal')
 
     <script>
     (function () {
@@ -39,6 +40,16 @@
         }
 
         window.openLoginModal = openLoginModal;
+        function openRegisterModal(e) {
+            if (e) e.preventDefault();
+            const modal = document.getElementById('registerModal');
+            if (!modal) return;
+            modal.setAttribute('aria-hidden', 'false');
+            modal.classList.add('open');
+            document.getElementById('modal_register_name').focus();
+        }
+
+        window.openRegisterModal = openRegisterModal;
         window.closeLoginModal = function () {
             const modal = document.getElementById('loginModal');
             if (!modal) return;
@@ -48,11 +59,25 @@
             if (errors) { errors.style.display = 'none'; errors.innerHTML = ''; }
             document.getElementById('loginModalForm').reset();
         };
+        window.closeRegisterModal = function () {
+            const modal = document.getElementById('registerModal');
+            if (!modal) return;
+            modal.setAttribute('aria-hidden', 'true');
+            modal.classList.remove('open');
+            const errors = document.getElementById('registerErrors');
+            if (errors) { errors.style.display = 'none'; errors.innerHTML = ''; }
+            document.getElementById('registerModalForm').reset();
+        };
 
         document.addEventListener('click', function (ev) {
             const t = ev.target.closest && ev.target.closest('.open-login');
             if (t) {
                 openLoginModal(ev);
+            }
+
+            const registerTrigger = ev.target.closest && ev.target.closest('.open-register');
+            if (registerTrigger) {
+                openRegisterModal(ev);
             }
         });
 
@@ -86,6 +111,7 @@
                     }
 
                     if (res.ok) {
+                        closeLoginModal();
                         window.location.reload();
                         return;
                     }
@@ -93,6 +119,46 @@
                     // fallback: submit normally
                     form.submit();
                 }).catch(() => form.submit());
+            });
+        }
+
+        const registerForm = document.getElementById('registerModalForm');
+        if (registerForm) {
+            registerForm.addEventListener('submit', function (ev) {
+                ev.preventDefault();
+                const data = new FormData(registerForm);
+
+                fetch(registerForm.action, {
+                    method: 'POST',
+                    headers: {
+                        'X-Requested-With': 'XMLHttpRequest',
+                        'Accept': 'application/json'
+                    },
+                    body: data,
+                    credentials: 'same-origin'
+                }).then(async (res) => {
+                    if (res.redirected) {
+                        closeRegisterModal();
+                        window.location.href = res.url;
+                        return;
+                    }
+
+                    if (res.status === 422) {
+                        const json = await res.json();
+                        const errors = document.getElementById('registerErrors');
+                        errors.style.display = 'block';
+                        errors.innerHTML = Object.values(json.errors || {}).map(arr => '<div>' + arr.join('<br>') + '</div>').join('');
+                        return;
+                    }
+
+                    if (res.ok) {
+                        closeRegisterModal();
+                        window.location.reload();
+                        return;
+                    }
+
+                    registerForm.submit();
+                }).catch(() => registerForm.submit());
             });
         }
     })();

@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Auth;
 
+use App\Models\Pengaduan;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
@@ -51,6 +52,7 @@ class RegistrationTest extends TestCase
                 'password' => 'password',
                 'password_confirmation' => 'password',
                 'role' => 'operator',
+                'bidang' => 'Sekretariat',
             ]);
 
         $response->assertRedirect(route('admin.users.create', absolute: false));
@@ -73,9 +75,13 @@ class RegistrationTest extends TestCase
     public function test_admin_dashboard_shows_active_operators_and_statistics(): void
     {
         $admin = User::factory()->create(['role' => 'admin', 'name' => 'Admin Utama']);
-        $operator = User::factory()->create(['role' => 'operator', 'name' => 'Operator Aktif']);
+        $operator = User::factory()->create([
+            'role' => 'operator',
+            'name' => 'Operator Aktif',
+            'bidang' => 'Sekretariat',
+        ]);
 
-        \App\Models\Pengaduan::create([
+        Pengaduan::create([
             'nomor_tiket' => 'TKT-20260910-001',
             'nama_lengkap' => 'Pelapor Satu',
             'nomor_telepon' => '081234567890',
@@ -85,7 +91,7 @@ class RegistrationTest extends TestCase
             'status' => 'pending',
         ]);
 
-        \App\Models\Pengaduan::create([
+        Pengaduan::create([
             'nomor_tiket' => 'TKT-20260910-002',
             'nama_lengkap' => 'Pelapor Dua',
             'nomor_telepon' => '081234567891',
@@ -100,8 +106,35 @@ class RegistrationTest extends TestCase
         $response->assertStatus(200);
         $response->assertViewIs('admin.dashboard');
         $response->assertSee('Operator Aktif');
+        $response->assertSee('Sekretariat');
         $response->assertSee('Statistik Pengaduan');
+        $response->assertSee('Laporan Pengaduan');
+        $response->assertSee('Tambah Admin / Operator');
         $response->assertSee('pending');
         $response->assertSee('selesai');
+    }
+
+    public function test_admin_can_view_the_complaint_report(): void
+    {
+        $admin = User::factory()->create(['role' => 'admin']);
+
+        $pengaduan = Pengaduan::create([
+            'nomor_tiket' => '#SD-2026-00123',
+            'nama_lengkap' => 'Pelapor Laporan',
+            'nomor_telepon' => '081234567890',
+            'email' => 'pelapor-laporan@example.com',
+            'sasaran_pengaduan' => 'Bidang Pembinaan SD',
+            'hal_diadukan' => 'Isi laporan pengaduan.',
+        ]);
+
+        $response = $this->actingAs($admin)->get(route('admin.reports'));
+
+        $response->assertStatus(200);
+        $response->assertViewIs('admin.reports');
+        $response->assertSee('Laporan Pengaduan');
+        $response->assertSee('Verifikasi');
+        $response->assertSee('Tindak Lanjut');
+        $response->assertSee('Action');
+        $response->assertSee(route('pengaduan.show', $pengaduan));
     }
 }

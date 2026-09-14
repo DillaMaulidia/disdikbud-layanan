@@ -13,6 +13,12 @@
             </div>
         </a>
 
+        <nav class="navbar-menu admin-nav-menu">
+            <a href="{{ route('admin.dashboard') }}">Dashboard Admin</a>
+            <a href="{{ route('admin.reports') }}">Laporan Pengaduan</a>
+            <a href="{{ route('admin.users.create') }}" class="active">Tambah Admin / Operator</a>
+        </nav>
+
         <div class="navbar-auth">
             <div class="profile-menu">
                 <button type="button" class="profile-avatar" title="Profil {{ Auth::user()->name }}" aria-label="Buka profil" onclick="toggleProfileMenu()">
@@ -76,6 +82,16 @@
                         <option value="">Pilih role</option>
                         @foreach($roles as $value => $label)
                             <option value="{{ $value }}" @selected(old('role') === $value)>{{ $label }}</option>
+                        @endforeach
+                    </select>
+                </div>
+
+                <div class="form-field">
+                    <label for="bidang">Bidang Operator</label>
+                    <select id="bidang" name="bidang">
+                        <option value="">Pilih bidang (wajib untuk operator)</option>
+                        @foreach($bidang as $value)
+                            <option value="{{ $value }}" @selected(old('bidang') === $value)>{{ $value }}</option>
                         @endforeach
                     </select>
                 </div>
