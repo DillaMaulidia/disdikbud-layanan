@@ -32,7 +32,10 @@ class PengaduanController extends Controller
             ->latest()
             ->get();
 
-        return view('tickets.index', compact('pengaduans'));
+        $masihDiproses = $pengaduans->whereIn('status', ['pending', 'diproses']);
+        $sudahSelesai = $pengaduans->whereNotIn('status', ['pending', 'diproses']);
+
+        return view('tickets.index', compact('pengaduans', 'masihDiproses', 'sudahSelesai'));
     }
 
     public function showTicket(Pengaduan $pengaduan): View
@@ -55,6 +58,18 @@ class PengaduanController extends Controller
         abort_unless($pengaduan->bukti_pendukung && Storage::disk('local')->exists($pengaduan->bukti_pendukung), 404);
 
         return response()->file(Storage::disk('local')->path($pengaduan->bukti_pendukung));
+    }
+
+    public function operatorEvidence(Pengaduan $pengaduan): BinaryFileResponse
+    {
+        $pengaduan = Pengaduan::query()
+            ->visibleTo(Auth::user())
+            ->whereKey($pengaduan->getKey())
+            ->firstOrFail();
+
+        abort_unless($pengaduan->bukti_operator && Storage::disk('local')->exists($pengaduan->bukti_operator), 404);
+
+        return response()->file(Storage::disk('local')->path($pengaduan->bukti_operator));
     }
 
     public function updateStatus(Request $request, Pengaduan $pengaduan): RedirectResponse
@@ -80,16 +95,45 @@ class PengaduanController extends Controller
 
         $pengaduan = $this->operatorTicket($pengaduan);
         $validated = $request->validate([
-            'tanggapan_operator' => ['required', 'string', 'max:5000'],
+            'tanggapan_operator' => ['nullable', 'string', 'max:5000', 'required_without:bukti_pendukung'],
+            'bukti_pendukung' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:5120'],
         ]);
 
+        if ($request->hasFile('bukti_pendukung')) {
+            if ($pengaduan->bukti_operator) {
+                Storage::disk('local')->delete($pengaduan->bukti_operator);
+            }
+
+            $validated['bukti_operator'] = $request->file('bukti_pendukung')->store('pengaduan/operator', 'local');
+        }
+
         $pengaduan->update([
-            'tanggapan_operator' => $validated['tanggapan_operator'],
-            'status' => $pengaduan->status === 'pending' ? 'diproses' : $pengaduan->status,
+            'tanggapan_operator' => $validated['tanggapan_operator'] ?? $pengaduan->tanggapan_operator,
+            'status' => 'selesai',
             'operator_id' => Auth::id(),
+            'bukti_operator' => $validated['bukti_operator'] ?? $pengaduan->bukti_operator,
         ]);
 
         return back()->with('success', 'Jawaban berhasil dikirim kepada pelapor.');
+    }
+
+    public function destroy(Pengaduan $pengaduan): RedirectResponse
+    {
+        abort_unless(Auth::user()->role === User::ROLE_OPERATOR, 403);
+
+        $pengaduan = $this->operatorTicket($pengaduan);
+
+        if ($pengaduan->bukti_pendukung) {
+            Storage::disk('local')->delete($pengaduan->bukti_pendukung);
+        }
+
+        if ($pengaduan->bukti_operator) {
+            Storage::disk('local')->delete($pengaduan->bukti_operator);
+        }
+
+        $pengaduan->delete();
+
+        return redirect()->route('pengaduan.tickets')->with('success', 'Laporan pengaduan berhasil dihapus.');
     }
 
     private function operatorTicket(Pengaduan $pengaduan): Pengaduan
@@ -109,7 +153,7 @@ class PengaduanController extends Controller
             'nama_lengkap' => 'required|string|max:255',
             'nomor_telepon' => 'required|string|max:20',
             'email' => 'required|email|max:255',
-            'sasaran_pengaduan' => ['required', 'string', Rule::in(User::bidang())],
+            'sasaran_pengaduan' => ['required', 'string', Rule::in(User::validBidang())],
             'hal_diadukan' => 'required|string|max:5000',
             'bukti_pendukung' => 'nullable|image|mimes:jpeg,jpg,png,webp|max:5120',
         ]);

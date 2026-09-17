@@ -17,6 +17,7 @@
 
         <nav class="navbar-menu" id="complaintNavbarMenu">
             <a href="{{ route('dashboard') }}">Dashboard Layanan</a>
+            <a href="{{ route('pengaduan.create') }}" class="active">Buat Pengaduan</a>
             <a href="{{ route('pengaduan.tickets') }}">Tiket Saya</a>
         </nav>
 
@@ -89,10 +90,9 @@
                     <label for="sasaran_pengaduan">Sasaran Pengaduan</label>
                     <select id="sasaran_pengaduan" name="sasaran_pengaduan" required>
                         <option value="">Pilih bidang / unit yang dituju</option>
-                        <option value="Bidang Pembinaan SD" @selected(old('sasaran_pengaduan') === 'Bidang Pembinaan SD')>Bidang Pembinaan SD</option>
-                        <option value="Bidang Pembinaan SMP" @selected(old('sasaran_pengaduan') === 'Bidang Pembinaan SMP')>Bidang Pembinaan SMP</option>
-                        <option value="Bidang Kebudayaan" @selected(old('sasaran_pengaduan') === 'Bidang Kebudayaan')>Bidang Kebudayaan</option>
-                        <option value="Sekretariat" @selected(old('sasaran_pengaduan') === 'Sekretariat')>Sekretariat</option>
+                        @foreach(\App\Models\User::bidang() as $bidang)
+                            <option value="{{ $bidang }}" @selected(old('sasaran_pengaduan') === $bidang)>{{ $bidang }}</option>
+                        @endforeach
                     </select>
                 </div>
 

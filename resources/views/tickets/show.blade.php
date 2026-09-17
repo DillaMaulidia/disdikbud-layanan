@@ -20,7 +20,7 @@
 
 <div class="ticket-detail-page">
     <header class="navbar">
-        <a href="{{ Auth::user()->role === 'operator' ? route('pengaduan.tickets') : route('dashboard') }}" class="navbar-brand">
+        <a href="{{ $isAdminContext ?? false ? route('admin.dashboard') : (Auth::user()->role === 'operator' ? route('pengaduan.tickets') : route('dashboard')) }}" class="navbar-brand">
             <img src="{{ asset('images/logo-disdikbud.png') }}" alt="Logo DISDIKBUD Kota Banda Aceh">
             <div class="brand-text">
                 <strong>DISDIKBUD</strong>
@@ -30,11 +30,18 @@
 
         <button class="mobile-menu-button" type="button" onclick="toggleDetailMenu()" aria-label="Buka menu">☰</button>
 
-        <nav class="navbar-menu" id="detailNavbarMenu">
-            @if(Auth::user()->role !== 'operator')
+        <nav class="navbar-menu {{ $isAdminContext ?? false ? 'admin-nav-menu' : '' }}" id="detailNavbarMenu">
+            @if($isAdminContext ?? false)
+                <a href="{{ route('admin.dashboard') }}">Dashboard Admin</a>
+                <a href="{{ route('admin.reports') }}" class="active">Laporan Pengaduan</a>
+                <a href="{{ route('admin.users.create') }}">Tambah Admin / Operator</a>
+            @elseif(Auth::user()->role !== 'operator')
                 <a href="{{ route('dashboard') }}">Dashboard Layanan</a>
+                <a href="{{ route('pengaduan.create') }}">Buat Pengaduan</a>
+                <a href="{{ route('pengaduan.tickets') }}" class="active">Tiket Saya</a>
+            @else
+                <a href="{{ route('pengaduan.tickets') }}" class="active">Tiket Pengaduan</a>
             @endif
-            <a href="{{ route('pengaduan.tickets') }}" class="active">Tiket Saya</a>
         </nav>
 
         <div class="navbar-auth">
@@ -55,7 +62,7 @@
 
     <main class="ticket-detail-main">
         <div class="ticket-detail-heading">
-            <a href="{{ route('pengaduan.tickets') }}" class="ticket-back" aria-label="Kembali ke tiket">‹</a>
+            <a href="{{ $isAdminContext ?? false ? route('admin.reports') : route('pengaduan.tickets') }}" class="ticket-back" aria-label="Kembali ke {{ $isAdminContext ?? false ? 'laporan pengaduan' : 'tiket' }}">‹</a>
             <h1>Detail Pengaduan</h1>
             <p>Pantau status dan perkembangan pengaduan Anda.</p>
         </div>
@@ -117,10 +124,18 @@
                 </div>
             </div>
 
-            @if($pengaduan->tanggapan_operator)
+            @if($pengaduan->tanggapan_operator || $pengaduan->bukti_operator)
                 <div class="operator-response">
-                    <h2>Jawaban Operator</h2>
-                    <p>{{ $pengaduan->tanggapan_operator }}</p>
+                    <div>
+                        <h2>Jawaban Operator</h2>
+                        <p>{{ $pengaduan->tanggapan_operator ?? 'Tidak ada pesan tindak lanjut.' }}</p>
+                    </div>
+                    @if($pengaduan->bukti_operator)
+                        <div class="operator-evidence">
+                            <h2>Foto Pendukung</h2>
+                            <img class="evidence-preview" src="{{ route('pengaduan.operator-evidence', $pengaduan) }}" alt="Foto pendukung dari operator untuk pengaduan {{ $pengaduan->nomor_tiket }}">
+                        </div>
+                    @endif
                 </div>
             @endif
 
@@ -137,25 +152,23 @@
                         </form>
                     @endif
 
-                    @if($pengaduan->status !== 'selesai')
-                        <form method="POST" action="{{ route('pengaduan.respond', $pengaduan) }}" class="ticket-response-form">
+                    @if($pengaduan->status === 'diproses')
+                        <form method="POST" action="{{ route('pengaduan.respond', $pengaduan) }}" class="ticket-response-form" enctype="multipart/form-data">
                             @csrf
                             @method('PATCH')
-                            <label for="tanggapan_operator">Jawaban untuk Pelapor</label>
-                            <textarea id="tanggapan_operator" name="tanggapan_operator" rows="4" placeholder="Tulis jawaban atau perkembangan pengaduan..." required>{{ old('tanggapan_operator', $pengaduan->tanggapan_operator) }}</textarea>
+                            <label for="tanggapan_operator">Pesan atau tanggapan</label>
+                            <textarea id="tanggapan_operator" name="tanggapan_operator" rows="4" placeholder="Tulis pesan atau perkembangan pengaduan...">{{ old('tanggapan_operator') }}</textarea>
                             @error('tanggapan_operator')
                                 <span class="ticket-form-error">{{ $message }}</span>
                             @enderror
-                            <button type="submit" class="ticket-action-button">Kirim Jawaban</button>
-                        </form>
-                    @endif
-
-                    @if($pengaduan->status === 'diproses')
-                        <form method="POST" action="{{ route('pengaduan.status', $pengaduan) }}">
-                            @csrf
-                            @method('PATCH')
-                            <input type="hidden" name="status" value="selesai">
-                            <button type="submit" class="ticket-action-button ticket-complete-button">Selesaikan Tiket</button>
+                            <label for="bukti_tindak_lanjut">Foto pendukung (opsional)</label>
+                            <label for="bukti_tindak_lanjut" class="ticket-file-button">Pilih Foto</label>
+                            <input id="bukti_tindak_lanjut" class="ticket-file-input" type="file" name="bukti_pendukung" accept="image/jpeg,image/png,image/webp">
+                            <img id="bukti_tindak_lanjut_preview" class="operator-photo-preview" alt="Preview foto tindak lanjut" hidden>
+                            @error('bukti_pendukung')
+                                <span class="ticket-form-error">{{ $message }}</span>
+                            @enderror
+                            <button type="submit" class="ticket-action-button ticket-complete-button">Selesaikan Laporan</button>
                         </form>
                     @endif
                 </div>
@@ -180,6 +193,19 @@ document.addEventListener('click', function (event) {
     if (profileMenu && !profileMenu.contains(event.target)) {
         dropdown.classList.remove('show');
     }
+});
+
+document.querySelectorAll('input[type="file"]').forEach(function (input) {
+    input.addEventListener('change', function () {
+        const preview = document.getElementById(`${input.id}_preview`);
+
+        if (!preview || !input.files[0]) {
+            return;
+        }
+
+        preview.src = URL.createObjectURL(input.files[0]);
+        preview.hidden = false;
+    });
 });
 </script>
 @endsection

@@ -19,6 +19,7 @@ class Pengaduan extends Model
         'hal_diadukan',
         'tanggapan_operator',
         'bukti_pendukung',
+        'bukti_operator',
         'status',
     ];
 

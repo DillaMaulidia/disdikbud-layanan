@@ -16,16 +16,23 @@ use Illuminate\Notifications\Notifiable;
 class User extends Authenticatable
 {
     public const BIDANG = [
+        'Bidang Umum',
+        'Bidang Pembinaan PAUD dan Pendidikan Non Formal',
         'Bidang Pembinaan SD',
         'Bidang Pembinaan SMP',
         'Bidang Kebudayaan',
-        'Sekretariat',
+        'Bidang Ketenagaan',
+        'UPTD Tekkomdik',
     ];
 
     public const BIDANG_CODES = [
+        'Bidang Umum' => 'UMUM',
+        'Bidang Pembinaan PAUD dan Pendidikan Non Formal' => 'PAUD',
         'Bidang Pembinaan SD' => 'SD',
         'Bidang Pembinaan SMP' => 'SMP',
         'Bidang Kebudayaan' => 'KBD',
+        'Bidang Ketenagaan' => 'KTG',
+        'UPTD Tekkomdik' => 'TEK',
         'Sekretariat' => 'SEK',
     ];
 
@@ -47,6 +54,11 @@ class User extends Authenticatable
     public static function bidang(): array
     {
         return self::BIDANG;
+    }
+
+    public static function validBidang(): array
+    {
+        return [...self::BIDANG, 'Sekretariat'];
     }
 
     public static function bidangCode(string $bidang): string

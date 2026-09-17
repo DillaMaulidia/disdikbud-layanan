@@ -185,6 +185,24 @@ body {
     border-radius: 999px;
 }
 
+.ticket-group-title {
+    margin: 24px 0 10px;
+    color: #1e293b;
+    font-size: 17px;
+}
+
+.navbar-menu a.nav-complaint-link {
+    color: #334155;
+    background: transparent;
+    box-shadow: none;
+}
+
+.navbar-menu a.nav-complaint-link:hover,
+.navbar-menu a.nav-complaint-link.active {
+    color: #0868b6;
+    background: rgba(8, 126, 209, 0.06);
+}
+
 .admin-nav-menu {
     flex: 1;
     justify-content: center;
@@ -1117,6 +1135,145 @@ body {
     font-weight: 700;
 }
 
+.report-filter {
+    display: flex;
+    align-items: end;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin: 4px 0 24px;
+    padding: 16px;
+    background: #f7fbff;
+    border: 1px solid #dcecf8;
+    border-radius: 12px;
+}
+
+.report-filter-field {
+    display: flex;
+    flex: 1 1 170px;
+    flex-direction: column;
+    gap: 6px;
+}
+
+.report-filter-field label {
+    color: #475569;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.report-filter-field select,
+.report-filter-field input {
+    min-height: 40px;
+    padding: 0 11px;
+    color: #1e293b;
+    background: #ffffff;
+    border: 1px solid #cbddea;
+    border-radius: 8px;
+    font: inherit;
+    font-size: 13px;
+}
+
+.report-filter-submit,
+.report-filter-reset {
+    min-height: 40px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+    padding: 0 14px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 700;
+    text-decoration: none;
+    cursor: pointer;
+}
+
+.report-filter-submit {
+    color: #ffffff;
+    background: #168ee5;
+    border: 1px solid #168ee5;
+}
+
+.report-filter-submit:hover { background: #0876c5; }
+
+.report-filter-reset {
+    color: #475569;
+    background: #ffffff;
+    border: 1px solid #cbddea;
+}
+
+.report-filter-reset:hover { color: #168ee5; border-color: #168ee5; }
+
+.report-filter-exports {
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-left: auto;
+    color: #475569;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.report-group + .report-group {
+    margin-top: 26px;
+    padding-top: 22px;
+    border-top: 1px solid #e5edf5;
+}
+
+.report-group-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 12px;
+}
+
+.report-group-header h2 {
+    color: #111827;
+    font-size: 17px;
+}
+
+.report-downloads {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.report-download {
+    min-height: 38px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 11px 0 7px;
+    border: 1px solid;
+    border-radius: 8px;
+    font-size: 12px;
+    font-weight: 700;
+    text-decoration: none;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.report-download:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 10px rgba(15, 23, 42, 0.1);
+}
+
+.report-download-pdf { color: #b42318; background: #fff5f4; border-color: #f5b7b1; }
+.report-download-excel { color: #137333; background: #f1fbf3; border-color: #a8d5b0; }
+
+.export-file-icon {
+    min-width: 29px;
+    padding: 4px 3px;
+    border-radius: 5px;
+    color: #ffffff;
+    font-size: 9px;
+    line-height: 1.1;
+    text-align: center;
+}
+
+.report-download-pdf .export-file-icon { background: #d93025; }
+.report-download-excel .export-file-icon { background: #188038; }
+
 .operator-list {
     display: flex;
     flex-direction: column;
@@ -1296,6 +1453,21 @@ body {
     color: #ffffff;
     background: #168ee5;
     transform: translateY(-1px);
+}
+
+.ticket-action-form {
+    display: inline;
+}
+
+.ticket-action-delete {
+    cursor: pointer;
+    color: #dc2626;
+    background: #fff5f5;
+    border-color: #fecaca;
+}
+
+.ticket-action-delete:hover {
+    background: #dc2626;
 }
 
 .ticket-detail-page {
@@ -1480,6 +1652,12 @@ body {
     border-top: 1px solid #edf2f7;
 }
 
+.operator-response {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(220px, 0.8fr);
+    gap: 40px;
+}
+
 .operator-response h2,
 .ticket-operator-actions h2 {
     margin: 0 0 10px;
@@ -1493,6 +1671,10 @@ body {
     font-size: 13px;
     line-height: 1.6;
     white-space: pre-line;
+}
+
+.operator-evidence .evidence-preview {
+    width: min(100%, 260px);
 }
 
 .ticket-operator-actions {
@@ -1530,6 +1712,43 @@ body {
     resize: vertical;
 }
 
+.ticket-file-input {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+}
+
+.ticket-file-button {
+    width: fit-content;
+    min-height: 36px;
+    display: inline-flex;
+    align-items: center;
+    padding: 0 14px;
+    border: 1px solid #b9d8f1;
+    border-radius: 8px;
+    color: #087ed1;
+    background: #f4faff;
+    cursor: pointer;
+    font-size: 12px;
+    font-weight: 700;
+}
+
+.ticket-file-button:hover {
+    color: #ffffff;
+    background: #168ee5;
+}
+
+.operator-photo-preview {
+    width: min(100%, 260px);
+    max-height: 180px;
+    object-fit: cover;
+    border: 1px solid #cbd5e1;
+    border-radius: 6px;
+}
+
 .ticket-action-button {
     min-height: 40px;
     padding: 0 16px;
@@ -1565,7 +1784,8 @@ body {
     }
 
     .detail-summary,
-    .ticket-detail-content {
+    .ticket-detail-content,
+    .operator-response {
         grid-template-columns: 1fr 1fr;
     }
 
@@ -1593,7 +1813,8 @@ body {
     }
 
     .detail-summary,
-    .ticket-detail-content {
+    .ticket-detail-content,
+    .operator-response {
         grid-template-columns: 1fr;
         gap: 16px;
     }

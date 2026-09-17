@@ -1,6 +1,6 @@
 @extends('layouts.app')
 
-@section('title', 'Tiket Saya')
+@section('title', Auth::user()->role === 'operator' ? 'Tiket Pengaduan' : 'Tiket Saya')
 
 @section('content')
 <div class="complaint-page">
@@ -18,8 +18,9 @@
         <nav class="navbar-menu" id="ticketNavbarMenu">
             @if(Auth::user()->role !== 'operator')
                 <a href="{{ route('dashboard') }}">Dashboard Layanan</a>
+                <a href="{{ route('pengaduan.create') }}">Buat Pengaduan</a>
             @endif
-            <a href="{{ route('pengaduan.tickets') }}" class="active">Tiket Saya</a>
+            <a href="{{ route('pengaduan.tickets') }}" class="active">{{ Auth::user()->role === 'operator' ? 'Tiket Pengaduan' : 'Tiket Saya' }}</a>
         </nav>
 
         <div class="navbar-auth">
@@ -46,8 +47,21 @@
                 <p class="ticket-page-description">{{ Auth::user()->role === 'operator' ? 'Tindak lanjuti pengaduan yang masuk ke bidang Anda.' : 'Lihat perkembangan pengaduan berdasarkan nomor tiket yang Anda terima.' }}</p>
             </div>
 
-            <div class="table-wrap">
-                <table>
+            @php
+                $ticketGroups = Auth::user()->role === 'operator'
+                    ? [
+                        ['title' => 'Masih Diproses', 'items' => $masihDiproses],
+                        ['title' => 'Tiket Sudah Selesai', 'items' => $sudahSelesai],
+                    ]
+                    : [['title' => null, 'items' => $pengaduans]];
+            @endphp
+
+            @foreach($ticketGroups as $group)
+                @if($group['title'])
+                    <h2 class="ticket-group-title">{{ $group['title'] }} ({{ $group['items']->count() }})</h2>
+                @endif
+                <div class="table-wrap">
+                    <table>
                     <thead>
                         <tr>
                             <th>Nomor Tiket</th>
@@ -59,8 +73,8 @@
                             <th>Action</th>
                         </tr>
                     </thead>
-                    <tbody>
-                        @forelse($pengaduans as $pengaduan)
+                        <tbody>
+                        @forelse($group['items'] as $pengaduan)
                             <tr>
                                 <td><strong>{{ $pengaduan->nomor_tiket }}</strong></td>
                                 <td>{{ $pengaduan->nama_lengkap }}</td>
@@ -72,6 +86,15 @@
                                     <a href="{{ route('pengaduan.show', $pengaduan) }}" class="ticket-action" title="Lihat detail pengaduan" aria-label="Lihat detail pengaduan {{ $pengaduan->nomor_tiket }}">
                                         <span aria-hidden="true">&#128065;</span>
                                     </a>
+                                    @if(Auth::user()->role === 'operator')
+                                        <form method="POST" action="{{ route('pengaduan.destroy', $pengaduan) }}" class="ticket-action-form" onsubmit="return confirm('Hapus laporan pengaduan ini?')">
+                                            @csrf
+                                            @method('DELETE')
+                                            <button type="submit" class="ticket-action ticket-action-delete" title="Hapus laporan pengaduan" aria-label="Hapus laporan pengaduan {{ $pengaduan->nomor_tiket }}">
+                                                <span aria-hidden="true">&#128465;</span>
+                                            </button>
+                                        </form>
+                                    @endif
                                 </td>
                             </tr>
                         @empty
@@ -79,9 +102,10 @@
                                 <td colspan="7" class="empty-state">Belum ada tiket pengaduan.</td>
                             </tr>
                         @endforelse
-                    </tbody>
-                </table>
-            </div>
+                        </tbody>
+                    </table>
+                </div>
+            @endforeach
         </section>
     </main>
 </div>

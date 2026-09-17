@@ -42,6 +42,10 @@
             </a>
 
             @auth
+                <a href="{{ route('pengaduan.create') }}" class="nav-complaint-link">
+                    Buat Pengaduan
+                </a>
+
                 <a href="{{ route('pengaduan.tickets') }}">
                     Tiket Saya
                 </a>
@@ -99,15 +103,11 @@
             <h1>
 
                 <span class="title-normal">
-                    Layanan
+                    Layanan Pengaduan
                 </span>
 
                 <span class="title-blue">
-                    E-GOVERNMENT
-                </span>
-
-                <span class="title-normal">
-                    DISDIKBUD
+                    Dinas Pendidikan dan Kebudayaan
                 </span>
 
                 <span class="title-normal">
@@ -167,7 +167,7 @@
 
             <img
                 src="{{ asset('images/dashboard-hero.png') }}"
-                alt="Ilustrasi Layanan E-Government DISDIKBUD"
+                alt="Ilustrasi Layanan Pengaduan Dinas Pendidikan dan Kebudayaan Kota Banda Aceh"
             >
 
         </div>

@@ -28,12 +28,16 @@ Route::middleware('auth')->group(function () {
     Route::get('/tiket-saya', [PengaduanController::class, 'tickets'])->name('pengaduan.tickets');
     Route::get('/tiket-saya/{pengaduan}', [PengaduanController::class, 'showTicket'])->name('pengaduan.show');
     Route::get('/tiket-saya/{pengaduan}/bukti', [PengaduanController::class, 'evidence'])->name('pengaduan.evidence');
+    Route::get('/tiket-saya/{pengaduan}/bukti-operator', [PengaduanController::class, 'operatorEvidence'])->name('pengaduan.operator-evidence');
     Route::patch('/tiket-saya/{pengaduan}/status', [PengaduanController::class, 'updateStatus'])->name('pengaduan.status');
     Route::patch('/tiket-saya/{pengaduan}/tanggapan', [PengaduanController::class, 'respond'])->name('pengaduan.respond');
+    Route::delete('/tiket-saya/{pengaduan}', [PengaduanController::class, 'destroy'])->name('pengaduan.destroy');
 
     Route::prefix('admin')->name('admin.')->middleware('can:access-admin-panel')->group(function () {
         Route::get('/dashboard', [AdminUserController::class, 'dashboard'])->name('dashboard');
         Route::get('/laporan', [AdminUserController::class, 'reports'])->name('reports');
+        Route::get('/laporan/detail/{pengaduan}', [AdminUserController::class, 'showReport'])->name('reports.show');
+        Route::get('/laporan/{status}/{format}', [AdminUserController::class, 'exportReport'])->name('reports.export');
         Route::get('/users/create', [AdminUserController::class, 'create'])->name('users.create');
         Route::post('/users', [AdminUserController::class, 'store'])->name('users.store');
     });

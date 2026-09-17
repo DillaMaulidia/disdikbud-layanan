@@ -42,7 +42,73 @@
                 <p class="ticket-page-description">Pantau status verifikasi dan tindak lanjut seluruh pengaduan.</p>
             </div>
 
-            <div class="table-wrap">
+            <form method="GET" action="{{ route('admin.reports') }}" class="report-filter">
+                <div class="report-filter-field">
+                    <label for="status">Status laporan</label>
+                    <select id="status" name="status">
+                        <option value="semua" @selected($selectedStatus === 'semua')>Semua laporan</option>
+                        <option value="selesai" @selected($selectedStatus === 'selesai')>Laporan selesai</option>
+                        <option value="proses" @selected($selectedStatus === 'proses')>Masih diproses</option>
+                    </select>
+                </div>
+                <div class="report-filter-field">
+                    <label for="from">Dari tanggal</label>
+                    <input id="from" type="date" name="from" value="{{ $dateFrom }}">
+                </div>
+                <div class="report-filter-field">
+                    <label for="to">Sampai tanggal</label>
+                    <input id="to" type="date" name="to" value="{{ $dateTo }}">
+                </div>
+                <button type="submit" class="report-filter-submit">
+                    <span aria-hidden="true">&#128269;</span>
+                    Tampilkan
+                </button>
+                <a href="{{ route('admin.reports') }}" class="report-filter-reset">Reset</a>
+                @php
+                    $exportQueryString = $dateFrom || $dateTo ? '?'.http_build_query(array_filter(['from' => $dateFrom, 'to' => $dateTo])) : '';
+                @endphp
+                <div class="report-filter-exports">
+                    <span>Download semua:</span>
+                    <a href="{{ route('admin.reports.export', ['semua', 'pdf']).$exportQueryString }}" class="report-download report-download-pdf" title="Download semua laporan PDF" aria-label="Download semua laporan dalam PDF">
+                        <span class="export-file-icon" aria-hidden="true">PDF</span>
+                        <span>PDF</span>
+                    </a>
+                    <a href="{{ route('admin.reports.export', ['semua', 'excel']).$exportQueryString }}" class="report-download report-download-excel" title="Download semua laporan Excel" aria-label="Download semua laporan dalam Excel">
+                        <span class="export-file-icon" aria-hidden="true">XLS</span>
+                        <span>Excel</span>
+                    </a>
+                </div>
+            </form>
+
+            @php
+                $exportQuery = array_filter(['from' => $dateFrom, 'to' => $dateTo]);
+                $groups = $selectedStatus === 'selesai'
+                    ? [['key' => 'selesai', 'title' => 'Laporan Selesai', 'items' => $selesai]]
+                    : ($selectedStatus === 'proses'
+                        ? [['key' => 'proses', 'title' => 'Laporan Masih Diproses', 'items' => $diproses]]
+                        : [['key' => 'selesai', 'title' => 'Laporan Selesai', 'items' => $selesai], ['key' => 'proses', 'title' => 'Laporan Masih Diproses', 'items' => $diproses]]);
+            @endphp
+
+            @foreach ($groups as $group)
+                @php
+                    $groupExportQueryString = $exportQuery ? '?'.http_build_query($exportQuery) : '';
+                @endphp
+                <div class="report-group">
+                    <div class="report-group-header">
+                        <h2>{{ $group['title'] }} ({{ $group['items']->count() }})</h2>
+                        <div class="report-downloads">
+                            <a href="{{ route('admin.reports.export', [$group['key'], 'pdf']).$groupExportQueryString }}" class="report-download report-download-pdf" title="Download PDF" aria-label="Download {{ $group['title'] }} dalam PDF">
+                                <span class="export-file-icon" aria-hidden="true">PDF</span>
+                                <span>PDF</span>
+                            </a>
+                            <a href="{{ route('admin.reports.export', [$group['key'], 'excel']).$groupExportQueryString }}" class="report-download report-download-excel" title="Download Excel" aria-label="Download {{ $group['title'] }} dalam Excel">
+                                <span class="export-file-icon" aria-hidden="true">XLS</span>
+                                <span>Excel</span>
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="table-wrap">
                 <table>
                     <thead>
                         <tr>
@@ -57,7 +123,7 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @forelse($pengaduans as $pengaduan)
+                        @forelse($group['items'] as $pengaduan)
                             <tr>
                                 <td><strong>{{ $pengaduan->nomor_tiket }}</strong></td>
                                 <td>{{ $pengaduan->nama_lengkap }}</td>
@@ -75,19 +141,21 @@
                                 <td>{{ $pengaduan->operator?->name ?? 'Belum ditugaskan' }}</td>
                                 <td>{{ $pengaduan->tanggapan_operator ? 'Sudah dijawab' : 'Belum dijawab' }}</td>
                                 <td>
-                                    <a href="{{ route('pengaduan.show', $pengaduan) }}" class="ticket-action" title="Lihat detail pengaduan" aria-label="Lihat detail pengaduan {{ $pengaduan->nomor_tiket }}">
+                                    <a href="{{ route('admin.reports.show', $pengaduan) }}" class="ticket-action" title="Lihat detail pengaduan" aria-label="Lihat detail pengaduan {{ $pengaduan->nomor_tiket }}">
                                         <span aria-hidden="true">&#128065;</span>
                                     </a>
                                 </td>
                             </tr>
                         @empty
                             <tr>
-                                <td colspan="8" class="empty-state">Belum ada laporan pengaduan.</td>
+                                <td colspan="8" class="empty-state">Belum ada laporan pada kelompok ini.</td>
                             </tr>
                         @endforelse
                     </tbody>
                 </table>
-            </div>
+                    </div>
+                </div>
+            @endforeach
         </section>
     </main>
 </div>
