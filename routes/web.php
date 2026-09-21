@@ -29,6 +29,7 @@ Route::middleware('auth')->group(function () {
     Route::get('/tiket-saya/{pengaduan}', [PengaduanController::class, 'showTicket'])->name('pengaduan.show');
     Route::get('/tiket-saya/{pengaduan}/bukti', [PengaduanController::class, 'evidence'])->name('pengaduan.evidence');
     Route::get('/tiket-saya/{pengaduan}/bukti-operator', [PengaduanController::class, 'operatorEvidence'])->name('pengaduan.operator-evidence');
+    Route::get('/lampiran/{lampiran}', [PengaduanController::class, 'attachment'])->name('pengaduan.attachment');
     Route::patch('/tiket-saya/{pengaduan}/status', [PengaduanController::class, 'updateStatus'])->name('pengaduan.status');
     Route::patch('/tiket-saya/{pengaduan}/tanggapan', [PengaduanController::class, 'respond'])->name('pengaduan.respond');
     Route::delete('/tiket-saya/{pengaduan}', [PengaduanController::class, 'destroy'])->name('pengaduan.destroy');

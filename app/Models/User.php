@@ -16,22 +16,22 @@ use Illuminate\Notifications\Notifiable;
 class User extends Authenticatable
 {
     public const BIDANG = [
-        'Bidang Umum',
+        'Subbagian Umum, Kepegawaian, dan Aset',
         'Bidang Pembinaan PAUD dan Pendidikan Non Formal',
         'Bidang Pembinaan SD',
         'Bidang Pembinaan SMP',
         'Bidang Kebudayaan',
-        'Bidang Ketenagaan',
+        'Bidang GTK',
         'UPTD Tekkomdik',
     ];
 
     public const BIDANG_CODES = [
-        'Bidang Umum' => 'UMUM',
+        'Subbagian Umum, Kepegawaian, dan Aset' => 'UMUM',
         'Bidang Pembinaan PAUD dan Pendidikan Non Formal' => 'PAUD',
         'Bidang Pembinaan SD' => 'SD',
         'Bidang Pembinaan SMP' => 'SMP',
         'Bidang Kebudayaan' => 'KBD',
-        'Bidang Ketenagaan' => 'KTG',
+        'Bidang GTK' => 'GTK',
         'UPTD Tekkomdik' => 'TEK',
         'Sekretariat' => 'SEK',
     ];

@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Exports\PengaduanExport;
 use App\Models\Pengaduan;
+use App\Models\PengaduanLampiran;
 use App\Models\User;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Database\Eloquent\Builder;
@@ -102,16 +103,12 @@ class AdminUserController extends Controller
             return Excel::download(new PengaduanExport($pengaduans), $filename.'.xlsx');
         }
 
-        $buktiPendukung = $pengaduans->mapWithKeys(function (Pengaduan $pengaduan): array {
-            if (! $pengaduan->bukti_pendukung || ! Storage::disk('local')->exists($pengaduan->bukti_pendukung)) {
-                return [$pengaduan->getKey() => null];
-            }
-
-            $disk = Storage::disk('local');
-            $mimeType = File::mimeType($disk->path($pengaduan->bukti_pendukung));
-
-            return [$pengaduan->getKey() => 'data:'.$mimeType.';base64,'.base64_encode($disk->get($pengaduan->bukti_pendukung))];
-        });
+        $buktiPendukung = $pengaduans->mapWithKeys(fn (Pengaduan $pengaduan): array => [
+            $pengaduan->getKey() => $this->reportImages($pengaduan, PengaduanLampiran::SOURCE_PELAPOR, $pengaduan->bukti_pendukung),
+        ]);
+        $buktiOperator = $pengaduans->mapWithKeys(fn (Pengaduan $pengaduan): array => [
+            $pengaduan->getKey() => $this->reportImages($pengaduan, PengaduanLampiran::SOURCE_OPERATOR, $pengaduan->bukti_operator),
+        ]);
 
         return Pdf::loadView('admin.reports-pdf', [
             'pengaduans' => $pengaduans,
@@ -121,7 +118,39 @@ class AdminUserController extends Controller
                 default => 'Semua Laporan',
             },
             'buktiPendukung' => $buktiPendukung,
+            'buktiOperator' => $buktiOperator,
         ])->setPaper('a4', 'landscape')->download($filename.'.pdf');
+    }
+
+    /**
+     * @return array<int, string>
+     */
+    private function reportImages(Pengaduan $pengaduan, string $source, ?string $legacyPath): array
+    {
+        $disk = Storage::disk('local');
+        $paths = $pengaduan->lampirans
+            ->where('sumber', $source)
+            ->pluck('path')
+            ->all();
+
+        if ($paths === [] && $legacyPath) {
+            $paths = [$legacyPath];
+        }
+
+        return collect($paths)
+            ->filter(fn (string $path): bool => $disk->exists($path))
+            ->map(function (string $path) use ($disk): ?string {
+                $mimeType = File::mimeType($disk->path($path));
+
+                if (! str_starts_with($mimeType, 'image/')) {
+                    return null;
+                }
+
+                return 'data:'.$mimeType.';base64,'.base64_encode($disk->get($path));
+            })
+            ->filter()
+            ->values()
+            ->all();
     }
 
     public function store(Request $request): RedirectResponse
@@ -148,7 +177,7 @@ class AdminUserController extends Controller
     private function reportQuery(string $status = 'semua', ?string $dateFrom = null, ?string $dateTo = null): Builder
     {
         return Pengaduan::query()
-            ->with('operator')
+            ->with(['operator', 'lampirans'])
             ->when($status === 'selesai', fn (Builder $query) => $query->where('status', 'selesai'))
             ->when($status === 'proses', fn (Builder $query) => $query->whereIn('status', ['pending', 'diproses']))
             ->when($dateFrom, fn (Builder $query) => $query->whereDate('created_at', '>=', $dateFrom))

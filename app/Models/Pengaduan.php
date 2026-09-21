@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Pengaduan extends Model
 {
@@ -26,6 +27,11 @@ class Pengaduan extends Model
     public function operator(): BelongsTo
     {
         return $this->belongsTo(User::class, 'operator_id');
+    }
+
+    public function lampirans(): HasMany
+    {
+        return $this->hasMany(PengaduanLampiran::class);
     }
 
     public function scopeVisibleTo(Builder $query, User $user): void

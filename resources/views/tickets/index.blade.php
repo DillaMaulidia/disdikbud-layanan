@@ -31,6 +31,7 @@
 
                 <div class="profile-dropdown" id="ticketProfileDropdown">
                     <a href="{{ route('profile.edit') }}">Profil</a>
+                    @include('partials.developer-profile')
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
                         <button type="submit" class="logout-button">Logout</button>

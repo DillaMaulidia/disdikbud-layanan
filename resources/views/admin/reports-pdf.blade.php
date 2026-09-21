@@ -16,11 +16,13 @@
         .time-column { width: 10%; }
         .reporter-column { width: 13%; }
         .field-column { width: 9%; }
-        .content-column { width: 20%; }
+        .content-column { width: 17%; }
         .status-column { width: 8%; }
-        .response-column { width: 15%; }
+        .response-column { width: 14%; }
         .evidence-column { width: 10%; }
         .evidence-image { max-width: 58px; max-height: 48px; }
+        .evidence-item { display: block; margin-bottom: 3px; }
+        .evidence-item img { display: block; }
     </style>
 </head>
 <body>
@@ -36,9 +38,10 @@
                 <th class="reporter-column">Pelapor</th>
                 <th class="field-column">Bidang</th>
                 <th class="content-column">Isi Pengaduan</th>
-                <th class="status-column">Status</th>
+                <th class="evidence-column">Foto Laporan</th>
                 <th class="response-column">Tanggapan</th>
-                <th class="evidence-column">Foto Bukti</th>
+                <th class="evidence-column">Foto Tanggapan</th>
+                <th class="status-column">Status</th>
             </tr>
         </thead>
         <tbody>
@@ -50,18 +53,37 @@
                     <td>{{ $pengaduan->nama_lengkap }}<br>{{ $pengaduan->email }}</td>
                     <td>{{ $pengaduan->sasaran_pengaduan }}</td>
                     <td>{{ $pengaduan->hal_diadukan }}</td>
-                    <td>{{ ucfirst($pengaduan->status) }}</td>
-                    <td>{{ $pengaduan->tanggapan_operator ?? 'Belum ada tanggapan' }}</td>
                     <td>
-                        @if ($buktiPendukung->get($pengaduan->getKey()))
-                            <img class="evidence-image" src="{{ $buktiPendukung->get($pengaduan->getKey()) }}" alt="Bukti pendukung">
+                        @if ($buktiPendukung->get($pengaduan->getKey(), []))
+                            <div class="evidence-stack">
+                                @foreach ($buktiPendukung->get($pengaduan->getKey(), []) as $image)
+                                    <div class="evidence-item">
+                                        <img class="evidence-image" src="{{ $image }}" alt="Foto laporan">
+                                    </div>
+                                @endforeach
+                            </div>
                         @else
                             Tidak ada foto
                         @endif
                     </td>
+                    <td>{{ $pengaduan->tanggapan_operator ?? 'Belum ada tanggapan' }}</td>
+                    <td>
+                        @if ($buktiOperator->get($pengaduan->getKey(), []))
+                            <div class="evidence-stack">
+                                @foreach ($buktiOperator->get($pengaduan->getKey(), []) as $image)
+                                    <div class="evidence-item">
+                                        <img class="evidence-image" src="{{ $image }}" alt="Foto tanggapan">
+                                    </div>
+                                @endforeach
+                            </div>
+                        @else
+                            Tidak ada foto
+                        @endif
+                    </td>
+                    <td>{{ ucfirst($pengaduan->status) }}</td>
                 </tr>
             @empty
-                <tr><td colspan="9">Belum ada laporan pada kelompok ini.</td></tr>
+                <tr><td colspan="10">Belum ada laporan pada kelompok ini.</td></tr>
             @endforelse
         </tbody>
     </table>

@@ -16,6 +16,8 @@
         'ditolak' => 2,
         default => 1,
     };
+    $pelaporLampirans = $pengaduan->lampirans->where('sumber', 'pelapor');
+    $operatorLampirans = $pengaduan->lampirans->where('sumber', 'operator');
 @endphp
 
 <div class="ticket-detail-page">
@@ -51,6 +53,7 @@
                 </button>
                 <div class="profile-dropdown" id="detailProfileDropdown">
                     <a href="{{ route('profile.edit') }}">Profil</a>
+                    @include('partials.developer-profile')
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
                         <button type="submit" class="logout-button">Logout</button>
@@ -115,25 +118,55 @@
                     <p>{{ $pengaduan->hal_diadukan }}</p>
                 </div>
                 <div>
-                    <h2>Foto / Bukti Pendukung</h2>
-                    @if($pengaduan->bukti_pendukung)
-                        <img class="evidence-preview" src="{{ route('pengaduan.evidence', $pengaduan) }}" alt="Bukti pendukung pengaduan {{ $pengaduan->nomor_tiket }}">
+                    <h2>Foto / Dokumen Pendukung</h2>
+                    @if($pelaporLampirans->isNotEmpty())
+                        <div class="evidence-list">
+                            @foreach($pelaporLampirans as $lampiran)
+                                @if($lampiran->isImage())
+                                    <button class="evidence-image-button" type="button" data-image-url="{{ route('pengaduan.attachment', $lampiran) }}" data-image-alt="{{ $lampiran->nama_asli }}" aria-label="Perbesar {{ $lampiran->nama_asli }}">
+                                        <img class="evidence-preview" src="{{ route('pengaduan.attachment', $lampiran) }}" alt="{{ $lampiran->nama_asli }}">
+                                    </button>
+                                @else
+                                    <a href="{{ route('pengaduan.attachment', $lampiran) }}" target="_blank" rel="noopener">{{ $lampiran->nama_asli }}</a>
+                                @endif
+                            @endforeach
+                        </div>
+                    @elseif($pengaduan->bukti_pendukung)
+                        <button class="evidence-image-button" type="button" data-image-url="{{ route('pengaduan.evidence', $pengaduan) }}" data-image-alt="Bukti pendukung pengaduan {{ $pengaduan->nomor_tiket }}" aria-label="Perbesar bukti pendukung">
+                            <img class="evidence-preview" src="{{ route('pengaduan.evidence', $pengaduan) }}" alt="Bukti pendukung pengaduan {{ $pengaduan->nomor_tiket }}">
+                        </button>
                     @else
                         <p class="no-evidence">Tidak ada bukti pendukung.</p>
                     @endif
                 </div>
             </div>
 
-            @if($pengaduan->tanggapan_operator || $pengaduan->bukti_operator)
+            @if($pengaduan->status === 'diproses' || $pengaduan->tanggapan_operator || $operatorLampirans->isNotEmpty() || $pengaduan->bukti_operator)
                 <div class="operator-response">
                     <div>
                         <h2>Jawaban Operator</h2>
                         <p>{{ $pengaduan->tanggapan_operator ?? 'Tidak ada pesan tindak lanjut.' }}</p>
                     </div>
-                    @if($pengaduan->bukti_operator)
+                    @if($operatorLampirans->isNotEmpty() || $pengaduan->bukti_operator)
                         <div class="operator-evidence">
-                            <h2>Foto Pendukung</h2>
-                            <img class="evidence-preview" src="{{ route('pengaduan.operator-evidence', $pengaduan) }}" alt="Foto pendukung dari operator untuk pengaduan {{ $pengaduan->nomor_tiket }}">
+                            <h2>Foto / Dokumen Operator</h2>
+                            @if($operatorLampirans->isNotEmpty())
+                                <div class="evidence-list">
+                                    @foreach($operatorLampirans as $lampiran)
+                                        @if($lampiran->isImage())
+                                            <button class="evidence-image-button" type="button" data-image-url="{{ route('pengaduan.attachment', $lampiran) }}" data-image-alt="{{ $lampiran->nama_asli }}" aria-label="Perbesar {{ $lampiran->nama_asli }}">
+                                                <img class="evidence-preview" src="{{ route('pengaduan.attachment', $lampiran) }}" alt="{{ $lampiran->nama_asli }}">
+                                            </button>
+                                        @else
+                                            <a href="{{ route('pengaduan.attachment', $lampiran) }}" target="_blank" rel="noopener">{{ $lampiran->nama_asli }}</a>
+                                        @endif
+                                    @endforeach
+                                </div>
+                            @else
+                                <button class="evidence-image-button" type="button" data-image-url="{{ route('pengaduan.operator-evidence', $pengaduan) }}" data-image-alt="Foto pendukung dari operator untuk pengaduan {{ $pengaduan->nomor_tiket }}" aria-label="Perbesar foto pendukung operator">
+                                    <img class="evidence-preview" src="{{ route('pengaduan.operator-evidence', $pengaduan) }}" alt="Foto pendukung dari operator untuk pengaduan {{ $pengaduan->nomor_tiket }}">
+                                </button>
+                            @endif
                         </div>
                     @endif
                 </div>
@@ -161,9 +194,9 @@
                             @error('tanggapan_operator')
                                 <span class="ticket-form-error">{{ $message }}</span>
                             @enderror
-                            <label for="bukti_tindak_lanjut">Foto pendukung (opsional)</label>
-                            <label for="bukti_tindak_lanjut" class="ticket-file-button">Pilih Foto</label>
-                            <input id="bukti_tindak_lanjut" class="ticket-file-input" type="file" name="bukti_pendukung" accept="image/jpeg,image/png,image/webp">
+                            <label for="bukti_tindak_lanjut">Foto / dokumen pendukung (opsional)</label>
+                            <label for="bukti_tindak_lanjut" class="ticket-file-button">Pilih Foto / Dokumen</label>
+                            <input id="bukti_tindak_lanjut" class="ticket-file-input" type="file" name="bukti_pendukung[]" accept="image/jpeg,image/png,image/webp,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" multiple>
                             <img id="bukti_tindak_lanjut_preview" class="operator-photo-preview" alt="Preview foto tindak lanjut" hidden>
                             @error('bukti_pendukung')
                                 <span class="ticket-form-error">{{ $message }}</span>
@@ -175,6 +208,15 @@
             @endif
         </section>
     </main>
+</div>
+
+<div class="image-lightbox" id="imageLightbox" aria-hidden="true">
+    <div class="image-lightbox-backdrop" data-lightbox-close></div>
+    <div class="image-lightbox-content" role="dialog" aria-modal="true" aria-labelledby="imageLightboxTitle">
+        <button class="image-lightbox-close" type="button" data-lightbox-close aria-label="Tutup foto">&times;</button>
+        <p class="image-lightbox-title" id="imageLightboxTitle">Pratinjau foto</p>
+        <img id="imageLightboxImage" src="" alt="">
+    </div>
 </div>
 
 <script>
@@ -206,6 +248,36 @@ document.querySelectorAll('input[type="file"]').forEach(function (input) {
         preview.src = URL.createObjectURL(input.files[0]);
         preview.hidden = false;
     });
+});
+
+const imageLightbox = document.getElementById('imageLightbox');
+const imageLightboxImage = document.getElementById('imageLightboxImage');
+
+function closeImageLightbox() {
+    imageLightbox.classList.remove('open');
+    imageLightbox.setAttribute('aria-hidden', 'true');
+    imageLightboxImage.src = '';
+    document.body.classList.remove('lightbox-open');
+}
+
+document.querySelectorAll('[data-image-url]').forEach(function (button) {
+    button.addEventListener('click', function () {
+        imageLightboxImage.src = button.dataset.imageUrl;
+        imageLightboxImage.alt = button.dataset.imageAlt || 'Pratinjau foto';
+        imageLightbox.classList.add('open');
+        imageLightbox.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('lightbox-open');
+    });
+});
+
+document.querySelectorAll('[data-lightbox-close]').forEach(function (element) {
+    element.addEventListener('click', closeImageLightbox);
+});
+
+document.addEventListener('keydown', function (event) {
+    if (event.key === 'Escape' && imageLightbox.classList.contains('open')) {
+        closeImageLightbox();
+    }
 });
 </script>
 @endsection

@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use App\Models\Pengaduan;
+use App\Models\PengaduanLampiran;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
@@ -104,7 +105,27 @@ class PengaduanControllerTest extends TestCase
             $response->assertSee($bidang);
         }
 
+        $response->assertSee('Bidang GTK')
+            ->assertSee('Subbagian Umum, Kepegawaian, dan Aset')
+            ->assertDontSee('Bidang Umum')
+            ->assertDontSee('Bidang Ketenagaan');
         $response->assertDontSee('>Sekretariat<');
+    }
+
+    public function test_authenticated_user_can_view_the_developer_profiles(): void
+    {
+        $response = $this->actingAs(User::factory()->create())
+            ->get(route('dashboard'));
+
+        $response->assertOk()
+            ->assertSee('Profil Developer')
+            ->assertSee('M. Hilmy Helsinky')
+            ->assertSee('yduta21@gmail.com')
+            ->assertSee('Dilla Maulidia')
+            ->assertSee('dilla.maulidia03@gmail.com')
+            ->assertSee('Siti Zahara')
+            ->assertSee('sitizahara20042005@gmail.com')
+            ->assertSee('Tim Developer terdiri dari tiga mahasiswa');
     }
 
     public function test_authenticated_user_sees_create_complaint_button_on_dashboard(): void
@@ -153,7 +174,10 @@ class PengaduanControllerTest extends TestCase
                 'email' => 'budi@example.com',
                 'sasaran_pengaduan' => 'Sekretariat',
                 'hal_diadukan' => 'Permohonan informasi layanan.',
-                'bukti_pendukung' => UploadedFile::fake()->image('bukti.jpg'),
+                'bukti_pendukung' => [
+                    UploadedFile::fake()->image('bukti.jpg'),
+                    UploadedFile::fake()->create('surat.pdf', 100, 'application/pdf'),
+                ],
             ]);
 
         $response->assertRedirect();
@@ -169,6 +193,8 @@ class PengaduanControllerTest extends TestCase
 
         $this->assertNotNull($pengaduan->bukti_pendukung);
         Storage::disk('local')->assertExists($pengaduan->bukti_pendukung);
+        $this->assertDatabaseCount('pengaduan_lampirans', 2);
+        $this->assertSame(2, $pengaduan->lampirans()->count());
 
         $this->assertMatchesRegularExpression(
             '/^#(SD|SMP|KBD|SEK)-\d{4}-\d{5}$/',
@@ -301,6 +327,8 @@ class PengaduanControllerTest extends TestCase
 
     public function test_operator_can_verify_answer_and_complete_a_ticket(): void
     {
+        Storage::fake('local');
+
         $operator = User::factory()->create([
             'role' => User::ROLE_OPERATOR,
             'bidang' => 'Sekretariat',
@@ -334,7 +362,7 @@ class PengaduanControllerTest extends TestCase
         $this->actingAs($operator)
             ->get(route('pengaduan.show', $pengaduan))
             ->assertOk()
-            ->assertSee('Foto Pendukung')
+            ->assertSee('Foto / Dokumen Pendukung')
             ->assertSee('Tidak ada pesan tindak lanjut.');
 
         $this->actingAs($operator)
@@ -349,22 +377,24 @@ class PengaduanControllerTest extends TestCase
         $this->actingAs($operator)
             ->get(route('pengaduan.show', $pengaduan))
             ->assertOk()
-            ->assertSee('Pesan atau tanggapan')
-            ->assertSee('Pilih Foto')
-            ->assertSee('Selesaikan Laporan')
-            ->assertDontSee('Simpan Tindak Lanjut')
-            ->assertDontSee('Selesaikan Tiket');
+            ->assertSee('Jawaban Operator')
+            ->assertSee('Pengaduan sedang kami tindak lanjuti.')
+            ->assertDontSee('Selesaikan Laporan');
 
         $this->actingAs($operator)
             ->patch(route('pengaduan.respond', $pengaduan), [
                 'tanggapan_operator' => 'Laporan sudah ditindaklanjuti dan diselesaikan.',
-                'bukti_pendukung' => UploadedFile::fake()->image('bukti-tindak-lanjut.jpg'),
+                'bukti_pendukung' => [
+                    UploadedFile::fake()->image('bukti-tindak-lanjut.jpg'),
+                    UploadedFile::fake()->create('laporan.pdf', 100, 'application/pdf'),
+                ],
             ])
             ->assertRedirect();
         $pengaduan->refresh();
         $this->assertSame('Laporan sudah ditindaklanjuti dan diselesaikan.', $pengaduan->tanggapan_operator);
         $this->assertSame('selesai', $pengaduan->status);
         $this->assertTrue(Storage::disk('local')->exists($pengaduan->bukti_operator));
+        $this->assertSame(2, $pengaduan->lampirans()->where('sumber', PengaduanLampiran::SOURCE_OPERATOR)->count());
     }
 
     public function test_operator_can_delete_a_ticket_from_their_assigned_field(): void

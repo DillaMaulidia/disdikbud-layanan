@@ -29,6 +29,7 @@
 
                 <div class="profile-dropdown" id="complaintProfileDropdown">
                     <a href="{{ route('profile.edit') }}">Profil</a>
+                    @include('partials.developer-profile')
                     <form method="POST" action="{{ route('logout') }}">
                         @csrf
                         <button type="submit" class="logout-button">Logout</button>
@@ -102,15 +103,15 @@
                 </div>
 
                 <div class="form-field">
-                    <label for="bukti_pendukung">Foto / Bukti Pendukung <span>(opsional)</span></label>
+                    <label for="bukti_pendukung">Foto / Dokumen Pendukung <span>(opsional)</span></label>
                     <label class="file-upload" for="bukti_pendukung">
                         <span class="file-upload-icon" aria-hidden="true">↑</span>
                         <span>
-                            <strong>Pilih foto atau bukti pendukung</strong>
-                            <small id="file-name">JPG, JPEG, PNG, atau WEBP maksimal 5 MB</small>
+                            <strong>Pilih beberapa foto atau dokumen</strong>
+                            <small id="file-name">JPG, PNG, WEBP, PDF, DOC, atau DOCX maksimal 5 MB per file</small>
                         </span>
                     </label>
-                    <input id="bukti_pendukung" class="file-input" type="file" name="bukti_pendukung" accept="image/jpeg,image/png,image/webp">
+                    <input id="bukti_pendukung" class="file-input" type="file" name="bukti_pendukung[]" accept="image/jpeg,image/png,image/webp,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document" multiple>
                 </div>
 
                 <button type="submit" class="complaint-submit">Kirim Pengaduan <span>→</span></button>
@@ -140,7 +141,12 @@ document.addEventListener('click', function (event) {
 });
 
 document.getElementById('bukti_pendukung').addEventListener('change', function () {
-    document.getElementById('file-name').textContent = this.files[0]?.name || 'JPG, JPEG, PNG, atau WEBP maksimal 5 MB';
+    const fileNames = Array.from(this.files).map(function (file) {
+        return file.name;
+    });
+    document.getElementById('file-name').textContent = fileNames.length
+        ? fileNames.join(', ')
+        : 'JPG, PNG, WEBP, PDF, DOC, atau DOCX maksimal 5 MB per file';
 });
 </script>
 @endsection

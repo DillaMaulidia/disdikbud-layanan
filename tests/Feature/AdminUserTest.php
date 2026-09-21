@@ -17,19 +17,19 @@ class AdminUserTest extends TestCase
         $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
 
         $response = $this->actingAs($admin)->post('/admin/users', [
-            'name' => 'Operator Sekretariat',
+            'name' => 'Operator GTK',
             'email' => 'operator@example.com',
             'password' => 'password123',
             'password_confirmation' => 'password123',
             'role' => User::ROLE_OPERATOR,
-            'bidang' => 'Sekretariat',
+            'bidang' => 'Bidang GTK',
         ]);
 
         $response->assertRedirect(route('admin.users.create', absolute: false));
         $this->assertDatabaseHas('users', [
             'email' => 'operator@example.com',
             'role' => User::ROLE_OPERATOR,
-            'bidang' => 'Sekretariat',
+            'bidang' => 'Bidang GTK',
         ]);
     }
 
@@ -47,6 +47,19 @@ class AdminUserTest extends TestCase
 
         $response->assertSessionHasErrors('bidang');
         $this->assertDatabaseMissing('users', ['email' => 'operator-tanpa-bidang@example.com']);
+    }
+
+    public function test_admin_can_view_the_updated_operator_fields(): void
+    {
+        $admin = User::factory()->create(['role' => User::ROLE_ADMIN]);
+
+        $response = $this->actingAs($admin)->get('/admin/users/create');
+
+        $response->assertOk()
+            ->assertSee('Bidang GTK')
+            ->assertSee('Subbagian Umum, Kepegawaian, dan Aset')
+            ->assertDontSee('Bidang Umum')
+            ->assertDontSee('Bidang Ketenagaan');
     }
 
     public function test_admin_can_view_and_export_reports_by_status(): void
